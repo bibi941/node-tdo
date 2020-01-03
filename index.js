@@ -13,7 +13,10 @@ module.exports.clear = async () => {
 
 module.exports.showAll = async () => {
   const taskList = await db.read()
+  printTask(taskList)
+}
 
+const printTask = (taskList) => {
   inquirer.prompt({
     type: 'list',
     name: 'index',
@@ -28,32 +31,38 @@ module.exports.showAll = async () => {
   }).then(answers => {
       const index = +answers.index
       if (index >= 0) {
-        inquirer.prompt({
-          type: 'list',
-          name: 'action',
-          message: '请选择操作',
-          choices: [
-            { name: '退出',value: 'quite' },
-            { name: '已完成',value: 'markAsDone' },
-            { name: '未完成',value: 'markAsUnDone' },
-            { name: '删除',value: 'deleteTask' },
-            { name: '改标题',value: 'updateTaskName' }
-          ]
-        }).then(answers2 => {
-          const action = answers2.action
-          const actionsMap = { quite,markAsDone,markAsUnDone,deleteTask,updateTaskName }
-          actionsMap[answers2.action] && typeof actionsMap[answers2.action] === 'function' && actionsMap[answers2.action](taskList,index)
-        })
+        askForAction(taskList,index)
       } else if (index === -2) { // 创建任务
-        inquirer.prompt({ type: 'input',name: 'taskName',message: '请输入新的任务名字' }).then(answers => {
-          taskList.push({ taskName: answers.taskName,done: false })
-          db.write(taskList)
-        })
+        createTask(taskList)
       }
     }
   )
 }
 
+const askForAction = (taskList,index) => {
+  inquirer.prompt({
+    type: 'list',
+    name: 'action',
+    message: '请选择操作',
+    choices: [
+      { name: '退出',value: 'quite' },
+      { name: '已完成',value: 'markAsDone' },
+      { name: '未完成',value: 'markAsUnDone' },
+      { name: '删除',value: 'deleteTask' },
+      { name: '改标题',value: 'updateTaskName' }
+    ]
+  }).then(answers2 => {
+    const actionsMap = { quite,markAsDone,markAsUnDone,deleteTask,updateTaskName }
+    const action = actionsMap[answers2.action]
+    action && typeof action === 'function' && action(taskList,index)
+  })
+}
+const createTask = (taskList) => {
+  inquirer.prompt({ type: 'input',name: 'taskName',message: '请输入新的任务名字' }).then(answers => {
+    taskList.push({ taskName: answers.taskName,done: false })
+    db.write(taskList)
+  })
+}
 const quite = () => {}
 const markAsDone = (taskList,index) => {
   taskList[index].done = true

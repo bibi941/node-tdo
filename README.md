@@ -1,3 +1,8 @@
 # node-todo-demo
-# node-tdo
-# node-tdo
+
+```js
+* node cli -h
+* node cli
+* node cli add
+* node cli clear
+```
